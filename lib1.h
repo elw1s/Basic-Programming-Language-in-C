@@ -1,3 +1,1 @@
-
-
-void print();
+char** split( char *line , int*);
