@@ -1,4 +1,4 @@
-#ifndef "lib1.h"
+#ifndef LIB1_H
 
 typedef struct{
     char name[50];
@@ -6,6 +6,12 @@ typedef struct{
 }variable;
 
 char** split( char *line , int*);
+
+int isKeyword(char *str);
+
+int isAppropriateVariableName(char *str);
+
+int isVariable(char *str);
 
 
 
