@@ -1,7 +1,7 @@
-#ifndef "lib1.h"
+#ifndef LIB1_H
 
 typedef struct{
-    char name[50];
+    char name[20];
     long int value;
 }variable;
 
