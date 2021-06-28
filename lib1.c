@@ -5,6 +5,10 @@
 
 int STRING_NUMBER = 10 ;
 int STRING_LENGTH = 100;
+variable var[1000];
+int var_index = 0;
+
+
 // Remember to free
 char** split( char *line , int *index){
 
@@ -28,6 +32,46 @@ char** split( char *line , int *index){
 
 		tokens[*index] = strtok(NULL , " ");
 	}
-	(*index)--;
+
 	return tokens;
+}
+
+void parse(char* file_name){
+
+FILE *fp = fopen(file_name , "r");
+
+if(f == NULL){
+    printf("File cannot opened.\n");
+    return;
+}
+
+char line[500];
+
+while(fgets(line , sizeof(line) , fp)){
+    int index;
+    char** tokens = split(line , &index);
+
+    //Varible Declaration
+    if(0 < index && !strcmp(tokens[0],"int")){
+        if(1 < index && )
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
 }

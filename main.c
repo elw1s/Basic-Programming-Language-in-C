@@ -5,11 +5,11 @@
 
 // add , out , newline , sub , loop , int , move
 
-void main(){
+void main(int argc,char * argv[]){
 
 	char line[150];
 
-	FILE *f = fopen("x.ba","r");
+	FILE *f = fopen(argv[0],"r");
 	// Openning file.
 	if(f == NULL){
 		printf("File cannot opened.\n");
@@ -22,7 +22,7 @@ void main(){
 
 	int index , i = 0;
 	char **bum = split(line , &index);
-	
+
 	while(bum[i] != NULL){
 		printf("%s\n",bum[i]);
 		i++;
