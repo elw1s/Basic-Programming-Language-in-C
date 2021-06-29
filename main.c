@@ -10,7 +10,7 @@ void main(int argc,char * argv[]){
 	char line[150];
 
 	FILE *f = fopen(argv[0],"r");
-	// Openning file.
+	// Opening file.
 	if(f == NULL){
 		printf("File cannot opened.\n");
 		return;
