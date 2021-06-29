@@ -7,27 +7,7 @@
 
 void main(int argc,char * argv[]){
 
-	char line[150];
+	parse("abo.ba");
 
-	FILE *f = fopen(argv[0],"r");
-	// Openning file.
-	if(f == NULL){
-		printf("File cannot opened.\n");
-		return;
-	}
-
-	fgets(line , 150 , f);
-	fgets(line , 150 , f);
-	fgets(line , 150 , f);
-
-	int index , i = 0;
-	char **bum = split(line , &index);
-
-	while(bum[i] != NULL){
-		printf("%s\n",bum[i]);
-		i++;
-	}
-
-	fclose(f);
 }
 

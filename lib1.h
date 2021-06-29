@@ -9,7 +9,7 @@ char** split( char *line , int*);
 
 void parse(char* file_name);
 
-int isKeyword(char *str);
+int isSpecialKeyword(char *str);
 
 int isAppropriateVariableName(char *str);
 
