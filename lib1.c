@@ -46,32 +46,6 @@ void parse(char* file_name){
 	    return;
 	}
 
-	/*char *codes[500] , *temp , line[500];
-	int code_count = 0;
-
-	while(fgets(line , sizeof(line) , fp)){
-		
-		int r = 0 , c = 0;
-		for(int i = 0 ; i< strlen(line); i++){
-
-			if( !(line[i] == '.' || line[i] == '\n' || line[i] == '\r')){
-				codes[r][c++] = line[i];
-			}		
-			else{
-				r++;
-				code_count++;
-			}
-		}
-	}
-
-	for(int i = 0; i< code_count ; i++){
-		printf("%s\n",codes[i]);
-	}
-	printf("%s\n",codes[0]);
-	printf("%s\n",codes[1]);
-	printf("%s\n",codes[2]);
-
-	fclose(fp);*/
 
 	char line[500];
 
@@ -120,21 +94,32 @@ void parse(char* file_name){
 
 	    	// Parse with ','
 
-	    	for(int i = 0; i< strlen(tokens[1]) ; i++){
-	    		if(tokens[1][i] != '"'){
-	    			tokens[1] = tokens[1] + 1;
+	    	for(int i = 1; i< size; i++){
 
-	    			for(int j = 0 ; j< strlen(tokens[1]) ; j++){
-	    				if(tokens[1][j] == '"'){
-	    					tokens[1][j] = '\0';
-	    					break;
-	    				}
-	    			}
+	    		if(strstr( tokens[i] , "\"") ){
 
-	    			printf("%s\n",tokens[1]);
-	    			break;
+	    			for(int k = 0; k< strlen(tokens[i]) ; k++){
+			    		if(tokens[i][k] != '"'){
+			    			tokens[i] = tokens[i] + 1;
+
+			    			for(int j = 0 ; j< strlen(tokens[i]) ; j++){
+			    				if(tokens[i][j] == '"'){
+			    					tokens[i][j] = '\0';
+			    					break;
+			    				}
+			    			}
+
+			    			printf("%s",tokens[i]);
+			    			break;
+			    		}
+			    	}
+	    		}
+	    		else if(strstr( tokens[i] , "newline")){
+	    			printf("\n");
 	    		}
 	    	}
+
+	    	
 
 	    }
 	    else if(0 < size && !strcmp(tokens[0],"add")){

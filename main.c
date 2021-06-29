@@ -8,6 +8,5 @@
 void main(int argc,char * argv[]){
 
 	parse("abo.ba");
-
 }
 
