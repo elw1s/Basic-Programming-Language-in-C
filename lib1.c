@@ -77,33 +77,6 @@ void parse(char* file_name){
 	    return;
 	}
 
-	/*char *codes[500] , *temp , line[500];
-	int code_count = 0;
-
-	while(fgets(line , sizeof(line) , fp)){
-
-		int r = 0 , c = 0;
-		for(int i = 0 ; i< strlen(line); i++){
-
-			if( !(line[i] == '.' || line[i] == '\n' || line[i] == '\r')){
-				codes[r][c++] = line[i];
-			}
-			else{
-				r++;
-				code_count++;
-			}
-		}
-	}
-
-	for(int i = 0; i< code_count ; i++){
-		printf("%s\n",codes[i]);
-	}
-	printf("%s\n",codes[0]);
-	printf("%s\n",codes[1]);
-	printf("%s\n",codes[2]);
-
-	fclose(fp);*/
-
 	char line[500];
 	while(fgets(line , sizeof(line) , fp)){
 	    int size;
@@ -148,6 +121,73 @@ void parse(char* file_name){
 	    //Move Operation
 	    else if(0 < size && !strcmp(tokens[0],"move")){
 
+	    	int to_be_moved;
+
+	    	// Source
+	    	if(size != 4){
+	    		fprintf(stderr, "%s", "move (A source) to ( A destination) expected.\n");
+	    		exit(-1);
+	    	}
+
+	    	if(isSpecialKeyword(tokens[1])){
+	    		fprintf(stderr, "%s", "Source cannot be a keyword.\n");
+	    		exit(-1);
+	    	}
+	    	else if(isInt(tokens[1] , strlen(tokens[1]))){
+	    		to_be_moved = atol(tokens[1]);
+	    	}
+	    	else if(isVariable(tokens[1])){
+
+	    		for(int i = 0; i< var_index; i++){
+	    			if(strcmp( var[i].name , tokens[1]) == 0){
+	    				to_be_moved = var[i].value;
+	    				break;
+	    			}
+	    		}
+	    	}
+	    	else{
+	    		fprintf(stderr, "%s", "Source is not known.\n");
+	    		exit(-1);
+	    	}
+
+	    	//To
+	    	if(strcmp(tokens[2] , "to") != 0){
+	    		fprintf(stderr, "%s", "move (A source) to ( A destination) expected.\n");
+	    		exit(-1);
+	    	}
+
+	    	// Destination
+
+	    	for(int i= 0 ;i < strlen(tokens[3]); i++){ // Modifying the integer to get rid of the '\n'
+	    		if(tokens[3][i] == '.'){
+	    			tokens[3][i] = '\0';
+	    			break;
+	    		}
+	    	}
+
+	    	if(isSpecialKeyword(tokens[3])){
+	    		fprintf(stderr, "%s", "Destination cannot be a keyword.\n");
+	    		exit(-1);
+	    	}
+	    	else if(isInt(tokens[3] , strlen(tokens[3]))){
+	    		fprintf(stderr, "%s", "Destination cannot be an integer.\n");
+	    		exit(-1);
+	    	}
+	    	else if(isVariable(tokens[3])){
+
+	    		for(int i = 0; i< var_index; i++){
+	    			if(strcmp( var[i].name , tokens[3]) == 0){
+	    				var[i].value = to_be_moved;
+	    				break;
+	    			}
+	    		}
+	    	}
+	    	else{
+	    		fprintf(stderr, "%s", "Destination is not known.\n");
+	    		exit(-1);
+	    	}
+
+
 	    }
 	    else if(0 < size && !strcmp(tokens[0],"sub")){
 
@@ -157,6 +197,13 @@ void parse(char* file_name){
 	    	// Parse with ','
 
 	    	for(int i = 1; i< size; i++){
+
+	    		for(int j = 0; j< strlen(tokens[i]) ; j++){ // Get rid of ','
+	    			if(tokens[i][j] == ','){
+	    				tokens[i][j] = '\0';
+	    				break;
+	    			}
+	    		}
 
 	    		if(strstr( tokens[i] , "\"") ){
 
@@ -183,7 +230,8 @@ void parse(char* file_name){
 
 	    			for(int j = 0; j< var_index; j++ ){
 
-	    				if( strcmp( var[j].name , tokens[i])){
+	    				if( strcmp( var[j].name , tokens[i]) == 0){
+
 	    					printf(" %ld" , var[j].value);
 	    				}
 	    			}
@@ -197,7 +245,7 @@ void parse(char* file_name){
 
 	    }
 	    else if(0 < size && !strcmp(tokens[0],"loop")){
-             long int loop_times = 0;
+             /*long int loop_times = 0;
              if(1 < size && tokens[1] == NULL){
                 printf("ERROR at line %d\n",error_line);
 	            fprintf(stderr, "%s", "You need to specify the number of turns of the loop.\n");
@@ -240,7 +288,7 @@ void parse(char* file_name){
                     if(print_newline) printf("\n");
                     }
 
-	        }
+	        }*/
 	    }
 	    else if(isThereOpenBracket(line , strlen(line)) || isThereCloseBracket(line , strlen(line))){
 
@@ -255,16 +303,16 @@ void parse(char* file_name){
 
 }
 
-char* remove_literal(char * str){
-char * arr;
-char * token = strtok(line , "\"");
+/*char* remove_literal(char * str){
+	char * arr;
+	char * token = strtok(line , "\"");
 
-while(token != NULL){
-    strcat(arr , token);
-    token = strtok(NULL , "\"");
-}
-return arr;
-}
+	while(token != NULL){
+	    strcat(arr , token);
+	    token = strtok(NULL , "\"");
+	}
+	return arr;
+}*/
 
 int isThereOpenBracket(char * line , int str_len){
     for(int i = 0; i < str_len; i++){
@@ -295,9 +343,9 @@ int isVariable(char *str){
 	// Does this variable name exist ?
 	for(int i = 0; i< var_index; i++){
 		if( !strcmp(var[i].name , str ))
-			return 0;
+			return 1;
 	}
-	return 1;
+	return 0;
 }
 int isAppropriateVariableName(char *str){
 
@@ -319,5 +367,11 @@ long int getValue(char *str){
 			return var[i].value;
 	}
 	return -1;
+}
+int isInt(char * str , int size){
+    for(int i = 0; i< size; i++){
+        if(!isdigit(str[i])) return 0;
+    }
+    return 1;
 }
 

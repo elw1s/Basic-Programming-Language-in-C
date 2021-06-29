@@ -17,6 +17,15 @@ int isVariable(char *str);
 
 int is_existing_variable(char *str);
 
+int isInt(char * str , int size);
+
+char* remove_literal(char * str);
+
+int isThereOpenBracket(char * line , int str_len);
+
+int isThereCloseBracket(char * line , int str_len);
+
+long int getValue(char *str);
 
 
 #endif
