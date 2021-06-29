@@ -8,6 +8,8 @@ int STRING_NUMBER = 10 ;
 int STRING_LENGTH = 100;
 variable var[1000];
 int var_index = 0;
+int error_line = 0;
+int bracket = 0;
 
 
 // Remember to free
@@ -37,6 +39,35 @@ char** split( char *line , int *size){
 	return tokens;
 }
 
+char** split_NEWLINE(char *line , int * size ){
+
+char **tokens;
+
+	*size = 0;
+	tokens = malloc(sizeof(char*) * STRING_NUMBER);
+
+	for(int i = 0; i < STRING_NUMBER; i++){
+		tokens[i] = malloc(sizeof(char) * STRING_LENGTH);
+	}
+
+	tokens[*size] = strtok(line , ".");
+
+	while(tokens[*size] != NULL){
+
+		++(*size);
+		if(*size > STRING_NUMBER - 20){
+			STRING_NUMBER *= 5;
+			tokens = realloc(tokens , sizeof(char*) * STRING_NUMBER);
+		}
+
+		tokens[*size] = strtok(NULL , ".");
+	}
+	return tokens;
+}
+
+
+
+
 void parse(char* file_name){
 
 	FILE *fp = fopen(file_name , "r");
@@ -50,13 +81,13 @@ void parse(char* file_name){
 	int code_count = 0;
 
 	while(fgets(line , sizeof(line) , fp)){
-		
+
 		int r = 0 , c = 0;
 		for(int i = 0 ; i< strlen(line); i++){
 
 			if( !(line[i] == '.' || line[i] == '\n' || line[i] == '\r')){
 				codes[r][c++] = line[i];
-			}		
+			}
 			else{
 				r++;
 				code_count++;
@@ -74,10 +105,11 @@ void parse(char* file_name){
 	fclose(fp);*/
 
 	char line[500];
-
 	while(fgets(line , sizeof(line) , fp)){
 	    int size;
+	    error_line++;
 	    char** tokens = split(line , &size);
+
 
 	    //Variable Declaration
 	    if(0 < size && !strcmp(tokens[0],"int")){
@@ -88,7 +120,7 @@ void parse(char* file_name){
 	            exit(-1);
 	        }
 	        //When the variable name is not appropriate.
-	        else if(1 < size && isAppropriateVariableName(tokens[1])){
+	        else if(1 < size && isVariable(tokens[1])){
 	            fprintf(stderr, "%s", "You need to give an appropriate name for the variable. It cannot contain numbers.\n");
 	            exit(-1);
 	        }
@@ -141,6 +173,16 @@ void parse(char* file_name){
 
 	    }
 	    else if(0 < size && !strcmp(tokens[0],"loop")){
+             if(1 < size && tokens[1] == NULL){
+                printf("ERROR at line %d\n",error_line);
+	            fprintf(stderr, "%s", "You need to specify the number of turns of the loop.\n");
+	            exit(-1);
+	        }
+	        else if(2 < size && strcmp(tokens[2],"times") != 0){
+                printf("ERROR at line %d\n",error_line);
+	            fprintf(stderr, "%s", "Missing keyword: \"times\".\n");
+	            exit(-1);
+	        }
 
 	    }
 	    else{
@@ -151,6 +193,20 @@ void parse(char* file_name){
 
 	fclose(fp);
 
+}
+
+int isThereOpenBracket(char * line , int str_len){
+    for(int i = 0; i < str_len; i++){
+        if(line[i] == '[') return 1;
+    }
+    return 0;
+}
+
+int isThereCloseBracket(char * line , int str_len){
+    for(int i = 0; i < str_len; i++){
+        if(line[i] == ']') return 1;
+    }
+    return 0;
 }
 
 int isSpecialKeyword(char *str){
@@ -177,7 +233,8 @@ int isVariable(char *str){
 	int length = strlen(str);
 
 	for(int i = 0; i< length; i++){
-		if( !(isalnum(str[i]) || str[i] == '_')){
+        if(i == 0 && str[i] == '_') return 0;
+		else if(!(isalnum(str[i])){
 			return 0;
 		}
 	}
