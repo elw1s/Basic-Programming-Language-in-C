@@ -1,6 +1,6 @@
 int size.
 int bum.
-move 5 to size.
+move 5 to size.S
 move size to bum.
 move 14 to size.
 out "amaniiin", size, bum, newline, "neler".

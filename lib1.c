@@ -87,10 +87,8 @@ void parse(char *line){
     error_line++;
     char** tokens = split(line , &size);
 
-
      //Variable Declaration
     if(0 < size && !strcmp(tokens[0],"int")){
-
         //When there is no name for the variable, print an error.
         if(1 < size && tokens[1] == NULL){
             fprintf(stderr, "%s", "You need to give a name for the variable.\n");
@@ -113,6 +111,7 @@ void parse(char *line){
                     tokens[1][i] = '\0';
                 }
             }
+
             strcpy(var[var_index].name , tokens[1]);
             var[var_index++].value = 0;
         }
@@ -323,9 +322,6 @@ void parse(char *line){
           exit(-1);
     }
 
-
-fclose(fp);
-
 }
 
 char* remove_literal(char * line){
@@ -358,7 +354,7 @@ int isSpecialKeyword(char *str){
 
 	if( !strcmp(str , "add") || !strcmp(str , "out") || !strcmp(str , "newline") ||
 		!strcmp(str , "sub") || !strcmp(str , "loop") || !strcmp(str , "int")
-		|| !strcmp(str , "move") || !strcmp(str , "from") )
+		|| !strcmp(str , "move") )
 	{
 		return 1;
 	}
