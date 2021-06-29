@@ -131,12 +131,7 @@ void parse(char* file_name){
 	        }
 	        //When the variable name is the appropriate
 	        else{
-	        	for(int i = 0; i< strlen(tokens[1]) ; i++){
-	        		if(tokens[1][i] == '.'){
-	        			tokens[1][i] = '\0';
-	        		}
-	        	}
-	            strcpy(var[var_index].name , tokens[1]);
+	            strcpy(tokens[1],var[var_index].name);
 	            var[var_index++].value = 0;
 	        }
 
@@ -144,6 +139,7 @@ void parse(char* file_name){
 	          fprintf(stderr, "%s", "You need to put END OF LINE (\".\") character at the end of the each line.\n");
 	          exit(-1);
 	        }
+
 	    }
 	    //Move Operation
 	    else if(0 < size && !strcmp(tokens[0],"move")){
@@ -156,41 +152,21 @@ void parse(char* file_name){
 
 	    	// Parse with ','
 
-	    	for(int i = 1; i< size; i++){
+	    	for(int i = 0; i< strlen(tokens[1]) ; i++){
+	    		if(tokens[1][i] != '"'){
+	    			tokens[1] = tokens[1] + 1;
 
-	    		if(strstr( tokens[i] , "\"") ){
-
-	    			for(int k = 0; k< strlen(tokens[i]) ; k++){
-			    		if(tokens[i][k] != '"'){
-			    			tokens[i] = tokens[i] + 1;
-
-			    			for(int j = 0 ; j< strlen(tokens[i]) ; j++){
-			    				if(tokens[i][j] == '"'){
-			    					tokens[i][j] = '\0';
-			    					break;
-			    				}
-			    			}
-
-			    			printf("%s",tokens[i]);
-			    			break;
-			    		}
-			    	}
-	    		}
-	    		else if(strstr( tokens[i] , "newline")){
-	    			printf("\n");
-	    		}
-	    		else {
-
-	    			for(int j = 0; j< var_index; j++ ){
-
-	    				if( strcmp( var[j].name , tokens[i])){
-	    					printf(" %ld" , var[j].value);
+	    			for(int j = 0 ; j< strlen(tokens[1]) ; j++){
+	    				if(tokens[1][j] == '"'){
+	    					tokens[1][j] = '\0';
+	    					break;
 	    				}
 	    			}
+
+	    			printf("%s\n",tokens[1]);
+	    			break;
 	    		}
 	    	}
-
-	    	
 
 	    }
 	    else if(0 < size && !strcmp(tokens[0],"add")){
@@ -257,21 +233,11 @@ int isVariable(char *str){
 	int length = strlen(str);
 
 	for(int i = 0; i< length; i++){
-
         if(i == 0 && str[i] == '_') return 0;
-
-		else if(!(isalnum(str[i]))){
+		else if(!(isalnum(str[i])){
 			return 0;
 		}
 	}
 	return 1;
 }
-int is_existing_variable(char *str){
 
-	for(int i = 0; i < var_index; i++){
-		if( strcmp( var[i].name , str) == 0){
-			return 1;
-		}
-	}
-	return 0;
-}

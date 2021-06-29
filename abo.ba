@@ -1,1 +1,2 @@
-out "amaniiin", newline, "neler".
+int size.
+out "amaniiin", size, newline, "neler".

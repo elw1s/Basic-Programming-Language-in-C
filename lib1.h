@@ -15,6 +15,8 @@ int isAppropriateVariableName(char *str);
 
 int isVariable(char *str);
 
+int is_existing_variable(char *str);
+
 
 
 #endif
