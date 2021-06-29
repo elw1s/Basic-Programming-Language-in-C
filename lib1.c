@@ -120,7 +120,7 @@ void parse(char* file_name){
 	            exit(-1);
 	        }
 	        //When the variable name is not appropriate.
-	        else if(1 < size && isVariable(tokens[1])){
+	        else if(1 < size && isAppropriateVariableName(tokens[1])){
 	            fprintf(stderr, "%s", "You need to give an appropriate name for the variable. It cannot contain numbers.\n");
 	            exit(-1);
 	        }
@@ -173,16 +173,52 @@ void parse(char* file_name){
 
 	    }
 	    else if(0 < size && !strcmp(tokens[0],"loop")){
+             long int loop_times = 0;
              if(1 < size && tokens[1] == NULL){
                 printf("ERROR at line %d\n",error_line);
 	            fprintf(stderr, "%s", "You need to specify the number of turns of the loop.\n");
 	            exit(-1);
+	        }
+	        else if(1 < size && !isVariable(tokens[1])){
+                loop_times = getValue(tokens[1]);
+	        }
+	        else if(1 < size){
+                //Integer deger ise buraya girecek.
 	        }
 	        else if(2 < size && strcmp(tokens[2],"times") != 0){
                 printf("ERROR at line %d\n",error_line);
 	            fprintf(stderr, "%s", "Missing keyword: \"times\".\n");
 	            exit(-1);
 	        }
+            if (3 < size && !strcmp(tokens[3],"out")){
+                    int print_newline = 0;
+
+                    if(size < 4){
+                        printf("ERROR at line %d\n",error_line);
+                        fprintf(stderr, "%s", "Missing String Literal: \"Example\".\n");
+                        exit(-1);
+                    }
+                    else if(5 < size && strcmp(tokens[5],",") != 0){
+                        printf("ERROR at line %d\n",error_line);
+                        fprintf(stderr, "%s", "Missing Comma:  , \n");
+                        exit(-1);
+                    }
+                    else if(6 < size && strcmp(tokens[6],"newline")){
+                        printf("ERROR at line %d\n",error_line);
+                        fprintf(stderr, "%s", "Missing Newline: newline\n");
+                        exit(-1);
+                    }
+
+                    if(6 < size && !strcmp(tokens[6],"newline")) print_newline = 1;
+                    char * str = remove_literal(tokens[4]);
+                    for(int i = 0; i < loop_times; i++){
+                    printf("%s", str);
+                    if(print_newline) printf("\n");
+                    }
+
+	        }
+	    }
+	    else if(isThereOpenBracket(line , strlen(line)) || isThereCloseBracket(line , strlen(line))){
 
 	    }
 	    else{
@@ -193,6 +229,17 @@ void parse(char* file_name){
 
 	fclose(fp);
 
+}
+
+char* remove_literal(char * str){
+char * arr;
+char * token = strtok(line , "\"");
+
+while(token != NULL){
+    strcat(arr , token);
+    token = strtok(NULL , "\"");
+}
+return arr;
 }
 
 int isThereOpenBracket(char * line , int str_len){
@@ -220,7 +267,7 @@ int isSpecialKeyword(char *str){
 	}
 	return 0;
 }
-int isAppropriateVariableName(char *str){
+int isVariable(char *str){
 	// Does this variable name exist ?
 	for(int i = 0; i< var_index; i++){
 		if( !strcmp(var[i].name , str ))
@@ -228,7 +275,7 @@ int isAppropriateVariableName(char *str){
 	}
 	return 1;
 }
-int isVariable(char *str){
+int isAppropriateVariableName(char *str){
 
 	int length = strlen(str);
 
@@ -239,5 +286,13 @@ int isVariable(char *str){
 		}
 	}
 	return 1;
+}
+
+long int getValue(char *str){
+	for(int i = 0; i< var_index; i++){
+		if( !strcmp(var[i].name , str ))
+			return var[i].value;
+	}
+	return -1;
 }
 
