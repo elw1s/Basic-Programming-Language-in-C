@@ -7,7 +7,7 @@ typedef struct{
 
 char** split( char *line , int*);
 
-void parse(char* file_name);
+void parse(char* line);
 
 int isSpecialKeyword(char *str);
 
@@ -27,5 +27,8 @@ int isThereCloseBracket(char * line , int str_len);
 
 long int getValue(char *str);
 
+void setValue(char * str , int value);
+
+void read(char *file_name);
 
 #endif

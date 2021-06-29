@@ -10,6 +10,7 @@ variable var[1000];
 int var_index = 0;
 int error_line = 0;
 int bracket = 0;
+FILE *fp;
 
 
 // Remember to free
@@ -66,253 +67,277 @@ char **tokens;
 }
 
 
-
-
-void parse(char* file_name){
-
-	FILE *fp = fopen(file_name , "r");
-
+void read(char *file_name){
+fp = fopen(file_name , "r");
 	if(fp == NULL){
 	    printf("File cannot opened.\n");
 	    return;
 	}
-
 	char line[500];
 	while(fgets(line , sizeof(line) , fp)){
-	    int size;
-	    error_line++;
-	    char** tokens = split(line , &size);
+        parse(line);
+	}
+fclose(fp);
+}
 
 
-	    //Variable Declaration
-	    if(0 < size && !strcmp(tokens[0],"int")){
+void parse(char *line){
 
-	        //When there is no name for the variable, print an error.
-	        if(1 < size && tokens[1] == NULL){
-	            fprintf(stderr, "%s", "You need to give a name for the variable.\n");
-	            exit(-1);
-	        }
-	        //When the variable name is not appropriate.
-	        else if(1 < size && isAppropriateVariableName(tokens[1])){
-	            fprintf(stderr, "%s", "You need to give an appropriate name for the variable. It cannot contain numbers.\n");
-	            exit(-1);
-	        }
-	        //When the variable name is the special string.
-	        else if(1 < size && isSpecialKeyword(tokens[1])){
-	            fprintf(stderr, "%s", "You need to give an appropriate name for the variable. It cannot be same as special keywords.\n");
-	            exit(-1);
-	        }
-	        //When the variable name is the appropriate
-	        else{
-	        	for(int i = 0; i< strlen(tokens[1]) ; i++){
-	        		if(tokens[1][i] == '.'){
-	        			tokens[1][i] = '\0';
-	        		}
-	        	}
-	            strcpy(var[var_index].name , tokens[1]);
-	            var[var_index++].value = 0;
-	        }
-
-	        if(2 < size && strcmp(tokens[2],".")){
-	          fprintf(stderr, "%s", "You need to put END OF LINE (\".\") character at the end of the each line.\n");
-	          exit(-1);
-	        }
-	    }
-	    //Move Operation
-	    else if(0 < size && !strcmp(tokens[0],"move")){
-
-	    	int to_be_moved;
-
-	    	// Source
-	    	if(size != 4){
-	    		fprintf(stderr, "%s", "move (A source) to ( A destination) expected.\n");
-	    		exit(-1);
-	    	}
-
-	    	if(isSpecialKeyword(tokens[1])){
-	    		fprintf(stderr, "%s", "Source cannot be a keyword.\n");
-	    		exit(-1);
-	    	}
-	    	else if(isInt(tokens[1] , strlen(tokens[1]))){
-	    		to_be_moved = atol(tokens[1]);
-	    	}
-	    	else if(isVariable(tokens[1])){
-
-	    		for(int i = 0; i< var_index; i++){
-	    			if(strcmp( var[i].name , tokens[1]) == 0){
-	    				to_be_moved = var[i].value;
-	    				break;
-	    			}
-	    		}
-	    	}
-	    	else{
-	    		fprintf(stderr, "%s", "Source is not known.\n");
-	    		exit(-1);
-	    	}
-
-	    	//To
-	    	if(strcmp(tokens[2] , "to") != 0){
-	    		fprintf(stderr, "%s", "move (A source) to ( A destination) expected.\n");
-	    		exit(-1);
-	    	}
-
-	    	// Destination
-
-	    	for(int i= 0 ;i < strlen(tokens[3]); i++){ // Modifying the integer to get rid of the '\n'
-	    		if(tokens[3][i] == '.'){
-	    			tokens[3][i] = '\0';
-	    			break;
-	    		}
-	    	}
-
-	    	if(isSpecialKeyword(tokens[3])){
-	    		fprintf(stderr, "%s", "Destination cannot be a keyword.\n");
-	    		exit(-1);
-	    	}
-	    	else if(isInt(tokens[3] , strlen(tokens[3]))){
-	    		fprintf(stderr, "%s", "Destination cannot be an integer.\n");
-	    		exit(-1);
-	    	}
-	    	else if(isVariable(tokens[3])){
-
-	    		for(int i = 0; i< var_index; i++){
-	    			if(strcmp( var[i].name , tokens[3]) == 0){
-	    				var[i].value = to_be_moved;
-	    				break;
-	    			}
-	    		}
-	    	}
-	    	else{
-	    		fprintf(stderr, "%s", "Destination is not known.\n");
-	    		exit(-1);
-	    	}
+    int size;
+    error_line++;
+    char** tokens = split(line , &size);
 
 
-	    }
-	    else if(0 < size && !strcmp(tokens[0],"sub")){
+     //Variable Declaration
+    if(0 < size && !strcmp(tokens[0],"int")){
 
-	    }
-	    else if(0 < size && !strcmp(tokens[0],"out")){
+        //When there is no name for the variable, print an error.
+        if(1 < size && tokens[1] == NULL){
+            fprintf(stderr, "%s", "You need to give a name for the variable.\n");
+            exit(-1);
+        }
+        //When the variable name is not appropriate.
+        else if(1 < size && isAppropriateVariableName(tokens[1])){
+            fprintf(stderr, "%s", "You need to give an appropriate name for the variable. It cannot contain numbers.\n");
+            exit(-1);
+        }
+        //When the variable name is the special string.
+        else if(1 < size && isSpecialKeyword(tokens[1])){
+            fprintf(stderr, "%s", "You need to give an appropriate name for the variable. It cannot be same as special keywords.\n");
+            exit(-1);
+        }
+        //When the variable name is the appropriate
+        else{
+            for(int i = 0; i< strlen(tokens[1]) ; i++){
+                if(tokens[1][i] == '.'){
+                    tokens[1][i] = '\0';
+                }
+            }
+            strcpy(var[var_index].name , tokens[1]);
+            var[var_index++].value = 0;
+        }
 
-	    	// Parse with ','
+        if(2 < size && strcmp(tokens[2],".")){
+          fprintf(stderr, "%s", "You need to put END OF LINE (\".\") character at the end of the each line.\n");
+          exit(-1);
+        }
+    }
+    //Move Operation
+    else if(0 < size && !strcmp(tokens[0],"move")){
 
-	    	for(int i = 1; i< size; i++){
+        int to_be_moved;
 
-	    		for(int j = 0; j< strlen(tokens[i]) ; j++){ // Get rid of ','
-	    			if(tokens[i][j] == ','){
-	    				tokens[i][j] = '\0';
-	    				break;
-	    			}
-	    		}
+        // Source
+        if(size != 4){
+            fprintf(stderr, "%s", "move (A source) to ( A destination) expected.\n");
+            exit(-1);
+        }
 
-	    		if(strstr( tokens[i] , "\"") ){
+        if(isSpecialKeyword(tokens[1])){
+            fprintf(stderr, "%s", "Source cannot be a keyword.\n");
+            exit(-1);
+        }
+        else if(isInt(tokens[1] , strlen(tokens[1]))){
+            to_be_moved = atol(tokens[1]);
+        }
+        else if(isVariable(tokens[1])){
 
-	    			for(int k = 0; k< strlen(tokens[i]) ; k++){
-			    		if(tokens[i][k] != '"'){
-			    			tokens[i] = tokens[i] + 1;
+            for(int i = 0; i< var_index; i++){
+                if(strcmp( var[i].name , tokens[1]) == 0){
+                    to_be_moved = var[i].value;
+                    break;
+                }
+            }
+        }
+        else{
+            fprintf(stderr, "%s", "Source is not known.\n");
+            exit(-1);
+        }
 
-			    			for(int j = 0 ; j< strlen(tokens[i]) ; j++){
-			    				if(tokens[i][j] == '"'){
-			    					tokens[i][j] = '\0';
-			    					break;
-			    				}
-			    			}
+        //To
+        if(strcmp(tokens[2] , "to") != 0){
+            fprintf(stderr, "%s", "move (A source) to ( A destination) expected.\n");
+            exit(-1);
+        }
 
-			    			printf("%s",tokens[i]);
-			    			break;
-			    		}
-			    	}
-	    		}
-	    		else if(strstr( tokens[i] , "newline")){
-	    			printf("\n");
-	    		}
-	    		else if(isVariable(tokens[i])){
+        // Destination
 
-	    			for(int j = 0; j< var_index; j++ ){
+        for(int i= 0 ;i < strlen(tokens[3]); i++){ // Modifying the integer to get rid of the '\n'
+            if(tokens[3][i] == '.'){
+                tokens[3][i] = '\0';
+                break;
+            }
+        }
 
-	    				if( strcmp( var[j].name , tokens[i]) == 0){
+        if(isSpecialKeyword(tokens[3])){
+            fprintf(stderr, "%s", "Destination cannot be a keyword.\n");
+            exit(-1);
+        }
+        else if(isInt(tokens[3] , strlen(tokens[3]))){
+            fprintf(stderr, "%s", "Destination cannot be an integer.\n");
+            exit(-1);
+        }
+        else if(isVariable(tokens[3])){
 
-	    					printf(" %ld" , var[j].value);
-	    				}
-	    			}
-	    		}
-	    	}
+            for(int i = 0; i< var_index; i++){
+                if(strcmp( var[i].name , tokens[3]) == 0){
+                    var[i].value = to_be_moved;
+                    break;
+                }
+            }
+        }
+        else{
+            fprintf(stderr, "%s", "Destination is not known.\n");
+            exit(-1);
+        }
 
-	    	
 
-	    }
-	    else if(0 < size && !strcmp(tokens[0],"add")){
+    }
+    else if(0 < size && !strcmp(tokens[0],"sub")){
 
-	    }
-	    else if(0 < size && !strcmp(tokens[0],"loop")){
-             /*long int loop_times = 0;
-             if(1 < size && tokens[1] == NULL){
-                printf("ERROR at line %d\n",error_line);
-	            fprintf(stderr, "%s", "You need to specify the number of turns of the loop.\n");
-	            exit(-1);
-	        }
-	        else if(1 < size && !isVariable(tokens[1])){
-                loop_times = getValue(tokens[1]);
-	        }
-	        else if(1 < size){
-                //Integer deger ise buraya girecek.
-	        }
-	        else if(2 < size && strcmp(tokens[2],"times") != 0){
-                printf("ERROR at line %d\n",error_line);
-	            fprintf(stderr, "%s", "Missing keyword: \"times\".\n");
-	            exit(-1);
-	        }
-            if (3 < size && !strcmp(tokens[3],"out")){
-                    int print_newline = 0;
+    }
+    else if(0 < size && !strcmp(tokens[0],"out")){
 
-                    if(size < 4){
-                        printf("ERROR at line %d\n",error_line);
-                        fprintf(stderr, "%s", "Missing String Literal: \"Example\".\n");
-                        exit(-1);
+        // Parse with ','
+
+        for(int i = 1; i< size; i++){
+
+            for(int j = 0; j< strlen(tokens[i]) ; j++){ // Get rid of ','
+                if(tokens[i][j] == ','){
+                    tokens[i][j] = '\0';
+                    break;
+                }
+            }
+
+            if(strstr( tokens[i] , "\"") ){
+
+                for(int k = 0; k< strlen(tokens[i]) ; k++){
+                    if(tokens[i][k] != '"'){
+                        tokens[i] = tokens[i] + 1;
+
+                        for(int j = 0 ; j< strlen(tokens[i]) ; j++){
+                            if(tokens[i][j] == '"'){
+                                tokens[i][j] = '\0';
+                                break;
+                            }
+                        }
+
+                        printf("%s",tokens[i]);
+                        break;
                     }
-                    else if(5 < size && strcmp(tokens[5],",") != 0){
-                        printf("ERROR at line %d\n",error_line);
-                        fprintf(stderr, "%s", "Missing Comma:  , \n");
-                        exit(-1);
-                    }
-                    else if(6 < size && strcmp(tokens[6],"newline")){
-                        printf("ERROR at line %d\n",error_line);
-                        fprintf(stderr, "%s", "Missing Newline: newline\n");
-                        exit(-1);
-                    }
+                }
+            }
+            else if(strstr( tokens[i] , "newline")){
+                printf("\n");
+            }
+            else if(isVariable(tokens[i])){
 
-                    if(6 < size && !strcmp(tokens[6],"newline")) print_newline = 1;
-                    char * str = remove_literal(tokens[4]);
-                    for(int i = 0; i < loop_times; i++){
+                for(int j = 0; j< var_index; j++ ){
+
+                    if( strcmp( var[j].name , tokens[i]) == 0){
+
+                        printf(" %ld" , var[j].value);
+                    }
+                }
+            }
+        }
+
+
+
+    }
+    //Add Operation
+    else if(0 < size && !strcmp(tokens[0],"add")){
+
+    }
+    //Loop
+    else if(0 < size && !strcmp(tokens[0],"loop")){
+         long int loop_times = 0;
+         if(1 < size && tokens[1] == NULL){
+            printf("ERROR at line %d\n",error_line);
+            fprintf(stderr, "%s", "You need to specify the number of turns of the loop.\n");
+            exit(-1);
+        }
+        else if(1 < size && isVariable(tokens[1])){
+            loop_times = getValue(tokens[1]);
+            setValue(tokens[1],0);
+        }
+        else if(1 < size && isInt(tokens[1], strlen(tokens[1]))){
+            loop_times = atol(tokens[1]);
+        }
+        else if(2 < size && strcmp(tokens[2],"times") != 0){
+            printf("ERROR at line %d\n",error_line);
+            fprintf(stderr, "%s", "Missing keyword: \"times\".\n");
+            exit(-1);
+        }
+        if (3 < size && !strcmp(tokens[3],"out")){
+                int print_newline = 0;
+
+                if(size < 4){
+                    printf("ERROR at line %d\n",error_line);
+                    fprintf(stderr, "%s", "Missing String Literal: \"Example\".\n");
+                    exit(-1);
+                }
+                else if(5 < size && strcmp(tokens[5],",") != 0){
+                    printf("ERROR at line %d\n",error_line);
+                    fprintf(stderr, "%s", "Missing Comma:  , \n");
+                    exit(-1);
+                }
+                else if(6 < size && strcmp(tokens[6],"newline")){
+                    printf("ERROR at line %d\n",error_line);
+                    fprintf(stderr, "%s", "Missing Newline: newline\n");
+                    exit(-1);
+                }
+
+                if(6 < size && !strcmp(tokens[6],"newline")) print_newline = 1;
+                char * str = remove_literal(tokens[4]);
+                for(int i = 0; i < loop_times; i++){
                     printf("%s", str);
                     if(print_newline) printf("\n");
-                    }
+                }
 
-	        }*/
-	    }
-	    else if(isThereOpenBracket(line , strlen(line)) || isThereCloseBracket(line , strlen(line))){
+        }
+        else{
+            char ** newCode;
+            int newCode_line = 0;
+            while(fgets(line , sizeof(line) , fp)){
+                tokens = split(line , &size);
 
-	    }
-	    else{
-	        fprintf(stderr, "%s", "There is no keyword.\n");
-	          exit(-1);
-	    }
-	}
+                newCode_line++;
+                if(isThereOpenBracket(tokens[0],strlen(tokens[0]))){
+                   bracket = 1;
+                }
+                if(bracket == 1){
 
-	fclose(fp);
+                }
+                else{
+
+                }
+            }
+        }
+    }
+    else if(isThereOpenBracket(line , strlen(line)) || isThereCloseBracket(line , strlen(line))){
+
+    }
+    else{
+        fprintf(stderr, "%s", "There is no keyword.\n");
+          exit(-1);
+    }
+
+
+fclose(fp);
 
 }
 
-/*char* remove_literal(char * str){
-	char * arr;
-	char * token = strtok(line , "\"");
+char* remove_literal(char * line){
+char * arr;
+char * token = strtok(line , "\"");
 
-	while(token != NULL){
-	    strcat(arr , token);
-	    token = strtok(NULL , "\"");
-	}
-	return arr;
-}*/
+while(token != NULL){
+    strcat(arr , token);
+    token = strtok(NULL , "\"");
+}
+return arr;
+}
 
 int isThereOpenBracket(char * line , int str_len){
     for(int i = 0; i < str_len; i++){
@@ -368,6 +393,15 @@ long int getValue(char *str){
 	}
 	return -1;
 }
+
+void setValue(char *str , int value){
+    for(int i = 0; i< var_index; i++){
+		if( !strcmp(var[i].name , str ))
+			var[i].value = value;
+			return;
+	}
+}
+
 int isInt(char * str , int size){
     for(int i = 0; i< size; i++){
         if(!isdigit(str[i])) return 0;

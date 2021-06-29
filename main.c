@@ -6,7 +6,6 @@
 // add , out , newline , sub , loop , int , move
 
 void main(int argc,char * argv[]){
-
-	parse("abo.ba");
+	read("abo.ba");
 }
 
