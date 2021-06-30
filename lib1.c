@@ -124,7 +124,7 @@ void parse(char *line){
     //Move Operation
     else if(0 < size && !strcmp(tokens[0],"move")){
 
-        int to_be_moved;
+        long int to_be_moved;
 
         // Source
         if(size != 4){
@@ -141,12 +141,7 @@ void parse(char *line){
         }
         else if(isVariable(tokens[1])){
 
-            for(int i = 0; i< var_index; i++){
-                if(strcmp( var[i].name , tokens[1]) == 0){
-                    to_be_moved = var[i].value;
-                    break;
-                }
-            }
+            to_be_moved = getValue(tokens[1]);
         }
         else{
             fprintf(stderr, "%s", "Source is not known.\n");
@@ -208,15 +203,22 @@ void parse(char *line){
                 }
             }
 
+            if( i == size - 1){ // Get rid of the '.' dot at the end.
+                tokens[ i ][strlen(tokens[i]) - 1] = '\0';
+            }
+
             if(strstr( tokens[i] , "\"") ){
 
+            	int flag = 1; // flag is 0 if the string doesn't contain spaces.
                 for(int k = 0; k< strlen(tokens[i]) ; k++){
+
                     if(tokens[i][k] != '"'){
                         tokens[i] = tokens[i] + 1;
 
                         for(int j = 0 ; j< strlen(tokens[i]) ; j++){
                             if(tokens[i][j] == '"'){
                                 tokens[i][j] = '\0';
+                                flag = 0;
                                 break;
                             }
                         }
@@ -225,19 +227,36 @@ void parse(char *line){
                         break;
                     }
                 }
+                if(flag == 1){ // There are spaces in the string.
+                	i++;
+                	while(!strstr(tokens[i] , "\"")){             		
+                        printf(" %s",tokens[i]);
+                        i++;
+                        if(i >= size){
+                            fprintf(stderr, "%s", "Quatation mark never closed.\n");
+                            exit(-1);
+                        }
+                	}
+
+                    // The part where the quatation mark will be closed.
+                    for(int j = 0 ; j< strlen(tokens[i]) ; j++){
+                        if(tokens[i][j] == '"'){
+                            tokens[i][j] = '\0';
+                            flag = 0;
+                            break;
+                        }
+                    }
+
+                    printf(" %s",tokens[i]);
+
+                	
+                } 
             }
             else if(strstr( tokens[i] , "newline")){
                 printf("\n");
             }
             else if(isVariable(tokens[i])){
-
-                for(int j = 0; j< var_index; j++ ){
-
-                    if( strcmp( var[j].name , tokens[i]) == 0){
-
-                        printf(" %ld" , var[j].value);
-                    }
-                }
+                printf("%ld" , getValue(tokens[i]));
             }
         }
 
@@ -246,6 +265,61 @@ void parse(char *line){
     }
     //Add Operation
     else if(0 < size && !strcmp(tokens[0],"add")){
+
+
+
+    	if(size != 4){
+    		fprintf(stderr, "%s", "add <int_value> to <variable>. expected.\n");
+            exit(-1);
+    	}
+
+    	long int to_be_added;
+
+    	// will be added value:
+    	if(isSpecialKeyword(tokens[1])){		
+    		fprintf(stderr, "%s", "add <int_value> to <variable>. expected.\n");
+            exit(-1);
+    	}
+    	else if(isInt(tokens[1] , strlen(tokens[1]))){
+            to_be_added = atol(tokens[1]);
+        }
+        else if(isVariable(tokens[1])){
+
+        	to_be_added = getValue(tokens[1]);
+        }
+        else{
+        	fprintf(stderr, "%s", "add <int_value> to <variable>. expected.\n");
+            exit(-1);
+        }
+
+        //To
+        if(strcmp(tokens[2] , "to")){ // third argument (second index) is not "to".
+        	fprintf(stderr, "%s", "add <int_value> TO <variable>. expected.\n");
+            exit(-1);
+        }
+
+        //Variable
+
+        for(int i = 0; i< strlen(tokens[3]) ; i++){ // Get rid of '.'
+        	if(tokens[3][i] == '.'){
+        		tokens[3][i] = '\0';
+        		break;
+        	}
+        }
+
+        if(!isVariable(tokens[3])){ // fourth argument is not a variable.
+        	fprintf(stderr, "%s", "add <int_value> to <variable>. expected.\n");
+            exit(-1);
+        }
+
+        for(int i = 0; i< var_index; i++){
+        	if(strcmp(var[i].name , tokens[3]) == 0){
+        		var[i].value += to_be_added;
+        		break;
+        	}
+        }
+
+
 
     }
     //Loop

@@ -1,6 +1,8 @@
 int size.
 int bum.
 move 5 to size.
-move size to bum.
-move 14 to size.
-out "amaniiin", size, bum, newline, "neler".
+move 3 to bum.
+add 4 to size.
+out newline, "Before add: ", bum, newline.
+add size to bum.
+out newline, "After add: ", bum, newline.
