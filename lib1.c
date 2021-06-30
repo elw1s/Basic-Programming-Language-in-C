@@ -189,10 +189,62 @@ void parse(char *line){
     }
     else if(0 < size && !strcmp(tokens[0],"sub")){
 
+        long int to_be_subbed;
+
+        if(size != 4){
+            fprintf(stderr, "%s", "sub <int_value> from <variable>. expected.\n");
+            exit(-1);
+        }
+
+        long int to_be_added;
+
+        // The value to be substracted:
+        if(isSpecialKeyword(tokens[1])){        
+            fprintf(stderr, "%s", "sub <int_value> from <variable>. expected.\n");
+            exit(-1);
+        }
+        else if(isInt(tokens[1] , strlen(tokens[1]))){
+            to_be_subbed = atol(tokens[1]);
+        }
+        else if(isVariable(tokens[1])){
+
+            to_be_subbed = getValue(tokens[1]);
+        }
+        else{
+            fprintf(stderr, "%s", "sub <int_value> from <variable>. expected.\n");
+            exit(-1);
+        }
+
+        //From
+        if(strcmp(tokens[2] , "from")){ // third argument (second index) is not "from".
+            fprintf(stderr, "%s", "sub <int_value> from <variable>. expected.\n");
+            exit(-1);
+        }
+
+        //Variable
+
+        for(int i = 0; i< strlen(tokens[3]) ; i++){ // Get rid of '.'
+            if(tokens[3][i] == '.'){
+                tokens[3][i] = '\0';
+                break;
+            }
+        }
+
+        if(!isVariable(tokens[3])){ // fourth argument is not a variable.
+            fprintf(stderr, "%s", "sub <int_value> from <variable>. expected.\n");
+            exit(-1);
+        }
+
+        for(int i = 0; i< var_index; i++){
+            if(strcmp(var[i].name , tokens[3]) == 0){
+                var[i].value -= to_be_subbed;
+                break;
+            }
+        }
+
+
     }
     else if(0 < size && !strcmp(tokens[0],"out")){
-
-        // Parse with ','
 
         for(int i = 1; i< size; i++){
 
@@ -204,7 +256,11 @@ void parse(char *line){
             }
 
             if( i == size - 1){ // Get rid of the '.' dot at the end.
-                tokens[ i ][strlen(tokens[i]) - 1] = '\0';
+                for(int j = 0; j< strlen(tokens[i]); j++){
+                    if(tokens[i][j] == '.'){
+                        tokens[i][j] = '\0';
+                    }
+                }
             }
 
             if(strstr( tokens[i] , "\"") ){

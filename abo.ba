@@ -1,8 +1,7 @@
 int size.
 int bum.
 move 5 to size.
-move 3 to bum.
-add 4 to size.
-out newline, "Before add: ", bum, newline.
-add size to bum.
-out newline, "After add: ", bum, newline.
+move 9 to bum.
+out newline, "Before sub: ", bum.
+sub size from bum.
+out newline, "After sub: ", bum, newline.
