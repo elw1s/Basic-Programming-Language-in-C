@@ -5,7 +5,7 @@ typedef struct{
     long int value;
 }variable;
 
-char** split( char *line , int*);
+char** split( char *line ,char * delimiter, int*);
 
 void parse(char* line);
 
@@ -19,7 +19,7 @@ int is_existing_variable(char *str);
 
 int isInt(char * str , int size);
 
-char* remove_literal(char * str);
+char* remove_literal(char * str , int index);
 
 int isThereOpenBracket(char * line , int str_len);
 
@@ -30,5 +30,9 @@ long int getValue(char *str);
 void setValue(char * str , int value);
 
 void read(char *file_name);
+
+void removeCommentLines(char* code);
+
+int substring(char *source, int from, int n, char *target);
 
 #endif

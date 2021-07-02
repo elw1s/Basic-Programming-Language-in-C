@@ -10,11 +10,14 @@ variable var[1000];
 int var_index = 0;
 int error_line = 0;
 int bracket = 0;
+int comma = 0;
+char *code;
+int num_lines;
 FILE *fp;
 
 
 // Remember to free
-char** split( char *line , int *size){
+char** split( char *line , char * delimiter, int *size){
 
 	char **tokens;
 	*size = 0;
@@ -24,7 +27,7 @@ char** split( char *line , int *size){
 		tokens[i] = malloc(sizeof(char) * STRING_LENGTH);
 	}
 
-	tokens[*size] = strtok(line , " ");
+	tokens[*size] = strtok(line , delimiter);
 
 	while(tokens[*size] != NULL){
 
@@ -34,58 +37,88 @@ char** split( char *line , int *size){
 			tokens = realloc(tokens , sizeof(char*) * STRING_NUMBER);
 		}
 
-		tokens[*size] = strtok(NULL , " ");
+		tokens[*size] = strtok(NULL , delimiter);
 	}
 
 	return tokens;
 }
-
-char** split_NEWLINE(char *line , int * size ){
-
-char **tokens;
-
-	*size = 0;
-	tokens = malloc(sizeof(char*) * STRING_NUMBER);
-
-	for(int i = 0; i < STRING_NUMBER; i++){
-		tokens[i] = malloc(sizeof(char) * STRING_LENGTH);
-	}
-
-	tokens[*size] = strtok(line , ".");
-
-	while(tokens[*size] != NULL){
-
-		++(*size);
-		if(*size > STRING_NUMBER - 20){
-			STRING_NUMBER *= 5;
-			tokens = realloc(tokens , sizeof(char*) * STRING_NUMBER);
-		}
-
-		tokens[*size] = strtok(NULL , ".");
-	}
-	return tokens;
-}
-
 
 void read(char *file_name){
-fp = fopen(file_name , "r");
+	long lSize;
+
+	fp = fopen(file_name, "rb");
+
 	if(fp == NULL){
 	    printf("File cannot opened.\n");
 	    return;
 	}
-	char line[500];
-	while(fgets(line , sizeof(line) , fp)){
-        parse(line);
+
+	fseek(fp, 0L, SEEK_END);
+	lSize = ftell(fp);
+	rewind(fp);
+
+	code = calloc(1, lSize + 1);
+	if (!code) fclose(fp), fputs("memory alloc fails", stderr), exit(1);
+
+	if (1 != fread(code, lSize, 1, fp)) {
+		fclose(fp), free(code), fputs("entire read fails", stderr), exit(1);
 	}
+	removeCommentLines(code);
+    char ** lines = split(code , "." , &num_lines);
+    for(int i = 0; i < num_lines - 1; i++){
+            parse(lines[i]);
+    }
 fclose(fp);
 }
 
+char left_substr[500];
+char right_substr[500];
+/* This function removes the comment lines from the given parameter */
+void removeCommentLines(char* code) {
+	int completed = 0; //This will be true when there is a closing curly bracket
+	for (int i = 0; i < strlen(code); i++) { //Search for {
+		if (code[i] == '{') { //When you find a curly bracket then look for the closing curly bracket
+			for (int j = i; j < strlen(code); j++) {
+				if (code[j] == '}') { //When you find the closing curly bracket, then you need to remove it from the code.
+					substring(code, 0, i, left_substr); //Firstly, take the left substring of the '{'
+					substring(code, j + 1, strlen(code), right_substr); //Secondly, take the right substring of the '}'
+					strcat(left_substr, right_substr); //Concentrate these substring into the left_substr variable
+					strcpy(code, left_substr); //Afterwards, copy the new code lines (comment is removed) into the code variable
+					completed = 1; //Set completed 1 because we have found the '}'
+					removeCommentLines(code); //Look for the other comments
+				}
+			}
+			//If there is no '}' but '{', then print an error and exit.
+			if (!completed) {
+				fprintf(stderr, "%s", "You need to close the comment line.\n");
+                exit(-1);
+			}
+		}
+	}
+}
+
+//Substring function
+int substring(char *source, int from, int n, char *target) {
+	int length, i;
+	for (length = 0; source[length] != '\0'; length++);
+	if (from > length) {
+		printf("Starting index is invalid.\n");
+		return 1;
+	}
+	if ((from + n) > length) {
+		n = (length - from);
+	}
+	for (i = 0; i < n; i++) {
+		target[i] = source[from + i];
+	}
+	target[i] = '\0';
+	return 0;
+}
 
 void parse(char *line){
-
     int size;
     error_line++;
-    char** tokens = split(line , &size);
+    char** tokens = split(line , " \n\r" , &size);
 
      //Variable Declaration
     if(0 < size && !strcmp(tokens[0],"int")){
@@ -95,8 +128,8 @@ void parse(char *line){
             exit(-1);
         }
         //When the variable name is not appropriate.
-        else if(1 < size && isAppropriateVariableName(tokens[1])){
-            fprintf(stderr, "%s", "You need to give an appropriate name for the variable. It cannot contain numbers.\n");
+        else if(1 < size && !isAppropriateVariableName(tokens[1])){
+            fprintf(stderr, "%s", "You need to give an appropriate name for the variable. It cannot start with numbers and underscore.\n");
             exit(-1);
         }
         //When the variable name is the special string.
@@ -111,7 +144,6 @@ void parse(char *line){
                     tokens[1][i] = '\0';
                 }
             }
-
             strcpy(var[var_index].name , tokens[1]);
             var[var_index++].value = 0;
         }
@@ -124,7 +156,7 @@ void parse(char *line){
     //Move Operation
     else if(0 < size && !strcmp(tokens[0],"move")){
 
-        long int to_be_moved;
+        int to_be_moved;
 
         // Source
         if(size != 4){
@@ -141,7 +173,16 @@ void parse(char *line){
         }
         else if(isVariable(tokens[1])){
 
-            to_be_moved = getValue(tokens[1]);
+            for(int i = 0; i< var_index; i++){
+                if(strcmp( var[i].name , tokens[1]) == 0){
+                    to_be_moved = var[i].value;
+                    break;
+                }
+            }
+        }
+        else if(4 < size && strcmp(tokens[4],".")){
+          fprintf(stderr, "%s", "You need to put END OF LINE (\".\") character at the end of the each line.\n");
+          exit(-1);
         }
         else{
             fprintf(stderr, "%s", "Source is not known.\n");
@@ -188,8 +229,7 @@ void parse(char *line){
 
     }
     else if(0 < size && !strcmp(tokens[0],"sub")){
-
-        long int to_be_subbed;
+              long int to_be_subbed;
 
         if(size != 4){
             fprintf(stderr, "%s", "sub <int_value> from <variable>. expected.\n");
@@ -199,7 +239,7 @@ void parse(char *line){
         long int to_be_added;
 
         // The value to be substracted:
-        if(isSpecialKeyword(tokens[1])){        
+        if(isSpecialKeyword(tokens[1])){
             fprintf(stderr, "%s", "sub <int_value> from <variable>. expected.\n");
             exit(-1);
         }
@@ -242,86 +282,63 @@ void parse(char *line){
             }
         }
 
-
     }
+    /* Errorlarda problem var. Tanýmlý bir variable olmasa bile error vermiyor */
     else if(0 < size && !strcmp(tokens[0],"out")){
 
-        for(int i = 1; i< size; i++){
+        if(1 < size && tokens[1] == NULL){
+            fprintf(stderr, "%s", "You need to give a string literal or a variable to print.\n");
+            exit(-1);
+        }
+        int printed = 0;
 
-            for(int j = 0; j< strlen(tokens[i]) ; j++){ // Get rid of ','
-                if(tokens[i][j] == ','){
-                    tokens[i][j] = '\0';
-                    break;
-                }
-            }
-
-            if( i == size - 1){ // Get rid of the '.' dot at the end.
-                for(int j = 0; j< strlen(tokens[i]); j++){
-                    if(tokens[i][j] == '.'){
-                        tokens[i][j] = '\0';
-                    }
-                }
-            }
-
-            if(strstr( tokens[i] , "\"") ){
-
-            	int flag = 1; // flag is 0 if the string doesn't contain spaces.
-                for(int k = 0; k< strlen(tokens[i]) ; k++){
-
-                    if(tokens[i][k] != '"'){
-                        tokens[i] = tokens[i] + 1;
-
-                        for(int j = 0 ; j< strlen(tokens[i]) ; j++){
-                            if(tokens[i][j] == '"'){
-                                tokens[i][j] = '\0';
-                                flag = 0;
-                                break;
-                            }
-                        }
-
-                        printf("%s",tokens[i]);
-                        break;
-                    }
-                }
-                if(flag == 1){ // There are spaces in the string.
-                	i++;
-                	while(!strstr(tokens[i] , "\"")){             		
-                        printf(" %s",tokens[i]);
-                        i++;
-                        if(i >= size){
-                            fprintf(stderr, "%s", "Quatation mark never closed.\n");
-                            exit(-1);
-                        }
-                	}
-
-                    // The part where the quatation mark will be closed.
-                    for(int j = 0 ; j< strlen(tokens[i]) ; j++){
-                        if(tokens[i][j] == '"'){
-                            tokens[i][j] = '\0';
-                            flag = 0;
+        for(int i = 1; i < size; i++){
+            if(strcmp(tokens[i],",") != 0 && printed == 0){
+                if(tokens[i][0] == '"'){
+                    for(i; i < size; i++){
+                        if(tokens[i][0] == '"' && tokens[i][strlen(tokens[i]) - 1] == '"'){
+                            char * temp = remove_literal(tokens[i],0);
+                            temp = remove_literal(temp , strlen(temp) - 1);
+                            printf("%s",temp);
                             break;
                         }
+                        else if(tokens[i][0] == '"'){
+                            printf("%s",remove_literal(tokens[i],0));
+                        }
+                        else if(tokens[i][strlen(tokens[i]) - 1] == '"'){
+                            if(strlen(tokens[i]) < 2) printf(" ");
+                            else printf(" %s",remove_literal(tokens[i],strlen(tokens[i])-1));
+                            break;
+                        }
+                        else{
+                            printf(" %s",tokens[i]);
+                        }
                     }
-
-                    printf(" %s",tokens[i]);
-
-                	
-                } 
+                }
+                else if(isVariable(tokens[i])){
+                    printf("%ld",getValue(tokens[i]));
+                }
+                else if(!strcmp(tokens[i],"newline")){
+                    printf("\n");
+                }
+                else{
+                    fprintf(stderr, "%s%d\n", "You need to give a string literal or a variable to print. Error at line " , error_line);
+                    exit(-1);
+                }
+                printed = 1;
             }
-            else if(strstr( tokens[i] , "newline")){
-                printf("\n");
+            else if(!strcmp(tokens[i],",")){
+                printed = 0;
             }
-            else if(isVariable(tokens[i])){
-                printf("%ld" , getValue(tokens[i]));
+            else{
+                fprintf(stderr, "%s%d\n", "Missing comma between string literals or variables. Error at line " , error_line);
+                exit(-1);
             }
         }
-
-
 
     }
     //Add Operation
     else if(0 < size && !strcmp(tokens[0],"add")){
-
 
 
     	if(size != 4){
@@ -332,7 +349,7 @@ void parse(char *line){
     	long int to_be_added;
 
     	// will be added value:
-    	if(isSpecialKeyword(tokens[1])){		
+    	if(isSpecialKeyword(tokens[1])){
     		fprintf(stderr, "%s", "add <int_value> to <variable>. expected.\n");
             exit(-1);
     	}
@@ -375,12 +392,11 @@ void parse(char *line){
         	}
         }
 
-
-
     }
     //Loop
     else if(0 < size && !strcmp(tokens[0],"loop")){
          long int loop_times = 0;
+
          if(1 < size && tokens[1] == NULL){
             printf("ERROR at line %d\n",error_line);
             fprintf(stderr, "%s", "You need to specify the number of turns of the loop.\n");
@@ -399,69 +415,107 @@ void parse(char *line){
             exit(-1);
         }
         if (3 < size && !strcmp(tokens[3],"out")){
-                int print_newline = 0;
-
-                if(size < 4){
-                    printf("ERROR at line %d\n",error_line);
-                    fprintf(stderr, "%s", "Missing String Literal: \"Example\".\n");
-                    exit(-1);
-                }
-                else if(5 < size && strcmp(tokens[5],",") != 0){
-                    printf("ERROR at line %d\n",error_line);
-                    fprintf(stderr, "%s", "Missing Comma:  , \n");
-                    exit(-1);
-                }
-                else if(6 < size && strcmp(tokens[6],"newline")){
-                    printf("ERROR at line %d\n",error_line);
-                    fprintf(stderr, "%s", "Missing Newline: newline\n");
-                    exit(-1);
-                }
-
-                if(6 < size && !strcmp(tokens[6],"newline")) print_newline = 1;
-                char * str = remove_literal(tokens[4]);
-                for(int i = 0; i < loop_times; i++){
-                    printf("%s", str);
-                    if(print_newline) printf("\n");
-                }
-
+                        if(4 < size){
+                            for(int i = 0; i < loop_times; i++){
+                                char str[500] = "";
+                                for(int i = 3; i < size; i++){
+                                    strcat(str , " ");
+                                    strcat(str ,tokens[i]);
+                                }
+                                parse(str);
+                            }
+                    }
+        }
+        else if (3 == size && !strcmp(tokens[3],"out")){
+            printf("ERROR at line %d\n",error_line);
+            fprintf(stderr, "%s", "Missing String Literal: \"Example\".\n");
+            exit(-1);
         }
         else{
-            char ** newCode;
+            char ** newCode = malloc(sizeof(char*)*100); //A for loop can contain 100 Lines within brackets
+                for(int i=0;i<100; i++)
+                    newCode[i] = malloc(sizeof(char)*5000); //A line can contain 5000 characters.
             int newCode_line = 0;
-            while(fgets(line , sizeof(line) , fp)){
-                tokens = split(line , &size);
-
-                newCode_line++;
-                if(isThereOpenBracket(tokens[0],strlen(tokens[0]))){
-                   bracket = 1;
+            int tmp_size = 0;
+            char ** temp = split(code , "." , &tmp_size);
+            int target = 0;
+            int equal;
+            printf("TEST1\n");
+            for(target; target < num_lines; target++){
+                    equal = 1;
+                    for(int i = 0; i < size && i < tmp_size; i++){
+                        if(strcmp(tokens[i],temp[i]) != 0){
+                                printf("Eşit değiller. %s != %s\n",tokens[i],temp[i]);
+                            equal = 0;
+                        }
+                    }
+                    if(equal) break;
+            }
+            printf("TEST2\n");
+            printf("TARGET LINE = %d",target);
+            for(int i = target; i < num_lines; i++){
+                printf("TARGET LINE = %d",target);
+                char ** line_code = split(temp[i]," \n\r" , &tmp_size);
+                if(isThereOpenBracket(temp[i],strlen(temp[i]))){
+                   bracket++;
                 }
-                if(bracket == 1){
 
+                strcat(newCode[newCode_line] , temp[i]);
+
+                if(isThereCloseBracket(temp[i],strlen(temp[i]))){
+                    bracket--;
                 }
+                if(bracket != 1) newCode_line++;
                 else{
-
+                    for(int i = 0; i < loop_times; i++){
+                        for(int k = 0; k < newCode_line; k++){
+                            parse(newCode[newCode_line]);
+                        }
+                    }
+                    break;
                 }
             }
+
+            /*while(fgets(line , sizeof(line) , fp)){
+                tokens = split(line ," \n\r", &size);
+                if(isThereOpenBracket(line,strlen(line))){
+                   bracket++;
+                }
+
+                strcat(newCode[newCode_line] , line);
+
+                if(isThereCloseBracket(line,strlen(line))){
+                    bracket--;
+                }
+                if(bracket != 1) newCode_line++;
+                else{
+                    for(int i = 0; i < loop_times; i++){
+                        for(int k = 0; k < newCode_line; k++){
+                            parse(newCode[newCode_line]);
+                        }
+                    }
+                    break;
+                }
+
+            }*/
         }
-    }
-    else if(isThereOpenBracket(line , strlen(line)) || isThereCloseBracket(line , strlen(line))){
 
     }
     else{
         fprintf(stderr, "%s", "There is no keyword.\n");
-          exit(-1);
+        exit(-1);
     }
 
 }
 
-char* remove_literal(char * line){
-char * arr;
-char * token = strtok(line , "\"");
+char* remove_literal(char * line , int index){
+char * arr = (char*)malloc(sizeof(line) * strlen(line));
+int target_index = 0;
 
-while(token != NULL){
-    strcat(arr , token);
-    token = strtok(NULL , "\"");
+for(int i = 0; i < strlen(line); i++){
+    if(i != index) arr[target_index++] = line[i];
 }
+arr[target_index] = '\0';
 return arr;
 }
 
@@ -484,7 +538,7 @@ int isSpecialKeyword(char *str){
 
 	if( !strcmp(str , "add") || !strcmp(str , "out") || !strcmp(str , "newline") ||
 		!strcmp(str , "sub") || !strcmp(str , "loop") || !strcmp(str , "int")
-		|| !strcmp(str , "move") )
+		|| !strcmp(str , "move") || !strcmp(str , "from") )
 	{
 		return 1;
 	}
@@ -503,12 +557,9 @@ int isAppropriateVariableName(char *str){
 	int length = strlen(str);
 
 	for(int i = 0; i< length; i++){
-
         if(i == 0 && str[i] == '_') return 0;
-
-		else if(!(isalnum(str[i]))){
+		else if(!(isalnum(str[i])))
 			return 0;
-		}
 	}
 	return 1;
 }
@@ -519,7 +570,6 @@ long int getValue(char *str){
 	}
 	return -1;
 }
-
 void setValue(char *str , int value){
     for(int i = 0; i< var_index; i++){
 		if( !strcmp(var[i].name , str ))
@@ -527,11 +577,11 @@ void setValue(char *str , int value){
 			return;
 	}
 }
-
 int isInt(char * str , int size){
     for(int i = 0; i< size; i++){
         if(!isdigit(str[i])) return 0;
     }
     return 1;
 }
+
 
