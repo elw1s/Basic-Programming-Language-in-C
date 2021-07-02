@@ -65,8 +65,8 @@ void read(char *file_name){
 	}
 	removeCommentLines(code);
     char ** lines = split(code , "." , &num_lines);
-    for(int i = 0; i < num_lines - 1; i++){
-            parse(lines[i]);
+    for(int i = 0; i < num_lines ; i++){
+        parse(lines[i]);
     }
 fclose(fp);
 }
@@ -286,7 +286,9 @@ void parse(char *line){
     /* Errorlarda problem var. Tanýmlý bir variable olmasa bile error vermiyor */
     else if(0 < size && !strcmp(tokens[0],"out")){
 
+
         if(1 < size && tokens[1] == NULL){
+
             fprintf(stderr, "%s", "You need to give a string literal or a variable to print.\n");
             exit(-1);
         }
@@ -321,7 +323,7 @@ void parse(char *line){
                 else if(!strcmp(tokens[i],"newline")){
                     printf("\n");
                 }
-                else{
+                else{  
                     fprintf(stderr, "%s%d\n", "You need to give a string literal or a variable to print. Error at line " , error_line);
                     exit(-1);
                 }

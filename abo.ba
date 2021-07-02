@@ -2,6 +2,6 @@ int size.
 int bum.
 move 5 to size.
 move 9 to bum.
-out newline, "Before sub: ", bum.
+out newline , "Before sub: " , bum.
 sub size from bum.
-out newline, "After sub: ", bum, newline.
+out newline , "After sub: " , bum , newline.
