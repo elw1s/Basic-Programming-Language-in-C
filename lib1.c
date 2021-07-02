@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include "lib1.h"
 
-int STRING_NUMBER = 10 ;
+int STRING_NUMBER = 20 ;
 int STRING_LENGTH = 100;
 variable var[1000];
 int var_index = 0;
@@ -32,7 +32,7 @@ char** split( char *line , char * delimiter, int *size){
 	while(tokens[*size] != NULL){
 
 		++(*size);
-		if(*size > STRING_NUMBER - 20){
+		if(*size > STRING_NUMBER - 10){
 			STRING_NUMBER *= 5;
 			tokens = realloc(tokens , sizeof(char*) * STRING_NUMBER);
 		}
